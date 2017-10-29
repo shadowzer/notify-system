@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Web.Http;
 using Gateway.Models;
-using Newtonsoft.Json;
 
 namespace Gateway.Controllers
 {
