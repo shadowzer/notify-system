@@ -16,7 +16,7 @@ namespace Gateway.Controllers
 		{
 			ServiceToUrl = new Dictionary<string, string>();
 			ServiceToUrl.Add("Telegram", "https://api.telegram.org/bot<token>/sendMessage"); // todo move secret out of project files
-			ServiceToUrl.Add("Viber", null);
+			ServiceToUrl.Add("Viber", "https://chatapi.viber.com/pa/send_message");
 
 			ServiceToIP = new Dictionary<string, string>();
 			ServiceToIP.Add("Telegram", "http://localhost:4470/telegram/convertMessage"); // todo change from static routing
