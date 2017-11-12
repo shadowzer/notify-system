@@ -1,44 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Web.Http;
 using Gateway.Models;
+using RabbitMQ.Client;
 
 namespace Gateway.Controllers
 {
-	public class RouteController : ApiController
+    public class RabbitClient
+    {
+        private static volatile RabbitClient instance;
+        private static object SyncRoot = new Object();
+        public IConnection Connection { get; private set; }
+        public IModel channel { get; private set; }
+        private RabbitClient()
+        {
+            var factory = new ConnectionFactory() { HostName = "localhost" };
+            this.Connection = factory.CreateConnection();
+            this.channel = this.Connection.CreateModel();
+        }
+
+        public static RabbitClient Instance
+        {
+            get
+            {
+                if (instance != null)
+                    return instance;
+
+                lock (SyncRoot)
+                {
+                    if (instance == null)
+                        instance = new RabbitClient();
+                }
+                return instance;
+            }
+        }
+    }
+    
+
+    public class RouteController : ApiController
 	{
-		private Dictionary<string, string> ServiceToIP;
-		private Dictionary<string, string> ServiceToUrl;
-
-		public RouteController()
-		{
-			ServiceToUrl = new Dictionary<string, string>();
-			ServiceToUrl.Add("Telegram", "https://api.telegram.org/bot<token>/sendMessage"); // todo move secret out of project files
-			ServiceToUrl.Add("Viber", "https://chatapi.viber.com/pa/send_message");
-
-			ServiceToIP = new Dictionary<string, string>();
-			ServiceToIP.Add("Telegram", "http://localhost:4470/telegram/convertMessage"); // todo change from static routing
-			ServiceToIP.Add("Viber", null);
-		}
-
-		[HttpPost]
+        [HttpPost]
 		[Route("send")]
-		public string ParseQuery(Job job)
+		public void ParseQuery(Job job)
 		{
-			using (var client = new HttpClient())
-			{
-				client.BaseAddress = new Uri(ServiceToIP[job.Service]);
-				var resp = client.PostAsJsonAsync("", job.Message);
-				using (var client2 = new HttpClient())
-				{
-					client2.BaseAddress = new Uri(ServiceToUrl[job.Service]);
-					var query = resp.Result.Content.ReadAsStringAsync().Result;
-					resp = client2.PostAsync("", new StringContent(query, Encoding.UTF8, "application/json"));
-					return resp.Result.Content.ReadAsStringAsync().Result;
-				}
-			}
-		}
-	}
+		    
+            RabbitClient.Instance.channel.BasicPublish(exchange: "messages",
+                routingKey: job.Service,
+                basicProperties: null,
+                body: Encoding.UTF8.GetBytes(job.Message.ToString()));
+            
+        }
+
+    }
 }
