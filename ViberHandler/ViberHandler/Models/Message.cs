@@ -12,7 +12,7 @@ namespace ViberHandler.Models
 
 		public override string ToString()
 		{
-			return "receiver: " + Id + ", text: " + Text + "type : text" + "sender:{ name : Johny}";// TODO:chenge sender name 
+			return "receiver: " + Id + ", text: " + Text + "type : text" + "sender:{ name : Johny}";// TODO:chenge sender name ,token
 		}
 	}
 }
