@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web.Http;
 using Gateway.Models;
 using Gateway.RabbitMQ;
@@ -34,9 +35,15 @@ namespace Gateway.Controllers
 			}
 		}
 
+		public async Task<HttpResponseMessage> PostAsync(HttpClient client, string method, string message)
+		{
+			return await client.PostAsync(method, new StringContent(message, Encoding.UTF8, "application/json"));
+		}
+
 		// bank gateway
 		public void SendAnswerToBank(string answer)
 		{
+			System.Diagnostics.Debug.WriteLine(answer);
 			// todo send answer to bank gateway
 		}
 	}
