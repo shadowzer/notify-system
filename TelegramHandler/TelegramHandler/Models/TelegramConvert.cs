@@ -8,13 +8,10 @@ namespace TelegramHandler.Models
 {
 	public class TelegramConvert : IMessageConverter
 	{
-		public object Convert(Message message)
+		public object Convert(Message message) => new TelegramMessage
 		{
-			return new TelegramMessage
-			{
-				chat_id = message.Id,
-				text = message.Text
-			}; ;
-		}
+			chat_id = message.Id,
+			text = message.Text
+		};
 	}
 }
