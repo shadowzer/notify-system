@@ -4,41 +4,40 @@ using System.Net.Http;
 using System.Text;
 using System.Web.Http;
 using Gateway.Models;
+using Gateway.RabbitMQ;
+using Newtonsoft.Json;
+using RabbitMQ.Client;
 
 namespace Gateway.Controllers
 {
 	public class RouteController : ApiController
 	{
-		private Dictionary<string, string> ServiceToIP;
-		private Dictionary<string, string> ServiceToUrl;
-
-		public RouteController()
-		{
-			ServiceToUrl = new Dictionary<string, string>();
-			ServiceToUrl.Add("Telegram", "https://api.telegram.org/bot<token>/sendMessage"); // todo move secret out of project files
-			ServiceToUrl.Add("Viber", null);
-
-			ServiceToIP = new Dictionary<string, string>();
-			ServiceToIP.Add("Telegram", "http://localhost:4470/telegram/convertMessage"); // todo change from static routing
-			ServiceToIP.Add("Viber", null);
-		}
-
+		// default gateway
 		[HttpPost]
 		[Route("send")]
-		public string ParseQuery(Job job)
+		public void SendMessage(Job job)
 		{
-			using (var client = new HttpClient())
+			var connection = RabbitClient.Instance.Connection;
+			using (var channel = connection.CreateModel())
 			{
-				client.BaseAddress = new Uri(ServiceToIP[job.Service]);
-				var resp = client.PostAsJsonAsync("", job.Message);
-				using (var client2 = new HttpClient())
-				{
-					client2.BaseAddress = new Uri(ServiceToUrl[job.Service]);
-					var query = resp.Result.Content.ReadAsStringAsync().Result;
-					resp = client2.PostAsync("", new StringContent(query, Encoding.UTF8, "application/json"));
-					return resp.Result.Content.ReadAsStringAsync().Result;
-				}
+				channel.QueueDeclare(queue: "TelegramPending",
+					durable: false,
+					exclusive: false,
+					autoDelete: false,
+					arguments: null);
+
+				channel.BasicPublish(exchange: "",
+					routingKey: "TelegramPending",
+					basicProperties: null,
+					body: Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(job.Message))
+				);
 			}
+		}
+
+		// bank gateway
+		public void SendAnswerToBank(string answer)
+		{
+			// todo send answer to bank gateway
 		}
 	}
 }
