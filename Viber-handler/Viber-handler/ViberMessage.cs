@@ -20,7 +20,7 @@ namespace Viber_handler
 
         public override string ToString()
         {
-            return "{\"auth_token\" :" + "\"46d1678012e7d48c-4a411369fcd8263d-122e41e707bdf322\" " + ",\"receiver\": \"" + Id + "\", \"text\": \"" + Text + "\",\"type\" : \"text\"}";// TODO:chenge sender name 
+            return "{\"auth_token\" :" + "\"46d7df8f5827d2bc-2029b8013c527800-5eccc42d2b8b0f5a\" " + ",\"receiver\": \"" + Id + "\", \"text\": \"" + Text + "\",\"type\" : \"text\"}";// TODO:chenge sender name 
         }
     }
 }
