@@ -29,13 +29,7 @@ namespace Viber_handler
                 {
                     var body = ea.Body;
                     var message = Encoding.UTF8.GetString(body);
-                     using (var client = new HttpClient())
-                    {
-                            client.BaseAddress = new Uri("https://chatapi.viber.com/pa/send_message");//TODO cut url to config
-                            var resp = client.PostAsync("", new StringContent(new ViberMessage(message).ToString(), Encoding.UTF8, "application/json"));
-                            Console.WriteLine(resp.Result.Content.ReadAsStringAsync().Result);
-                    }
-                    Console.WriteLine(new ViberMessage(message).ToString());
+                    sendMessageAsync(message);
                 };
                 channel.BasicConsume(queue: queueName,
                     noAck: true,
@@ -44,6 +38,15 @@ namespace Viber_handler
                 Console.WriteLine(" Press [enter] to exit.");
                 Console.ReadLine();
             }
+        }
+        static async void sendMessageAsync(string message)
+        {
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://chatapi.viber.com/pa/send_message");//TODO cut url to config
+                await client.PostAsync("", new StringContent(new ViberMessage(message).ToString(), Encoding.UTF8, "application/json"));
+            }
+            Console.WriteLine(new ViberMessage(message).ToString());
         }
     }
 }
