@@ -12,41 +12,42 @@ namespace Viber_handler
     {
         static void Main(string[] args)
         {
-            var factory = new ConnectionFactory() { HostName = "localhost" };
+            var factory = new ConnectionFactory() { HostName = "localhost" }; //todo get hostname from properties
             using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                channel.ExchangeDeclare(exchange: "messages",
-                    type: "direct");
-                var queueName = channel.QueueDeclare().QueueName;
+			using (var consumeChannel = connection.CreateModel())
+			using (var publishChannel = connection.CreateModel())
+			{
+				consumeChannel.ExchangeDeclare(exchange: "notifyMessages",
+					type: "direct");
+				var consumeQueueName = consumeChannel.QueueDeclare().QueueName;
+				consumeChannel.QueueBind(queue: consumeQueueName,
+					exchange: "notifyMessages",
+					routingKey: "viberPending");
 
-                channel.QueueBind(queue: queueName,
-                    exchange: "messages",
-                    routingKey: "viber");
+				publishChannel.ExchangeDeclare(exchange: "notifyMessages",
+					type: "direct");
+				publishChannel.QueueBind(queue: consumeQueueName,
+					exchange: "notifyMessages",
+					routingKey: "viberReady");
 
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
-                {
-                    var body = ea.Body;
-                    var message = Encoding.UTF8.GetString(body);
-                    sendMessageAsync(message);
-                };
-                channel.BasicConsume(queue: queueName,
-                    noAck: true,
-                    consumer: consumer);
+				var consumer = new EventingBasicConsumer(consumeChannel);
+				var converter = new ViberConverter();
+				consumer.Received += (model, ea) =>
+				{
+					var message = Encoding.UTF8.GetString(ea.Body);
+					var handledMessage = JsonConvert.SerializeObject(converter.Convert(new Message(message)));
+					publishChannel.BasicPublish(exchange: "notifyMessages",
+						routingKey: "viberReady",
+						body: Encoding.UTF8.GetBytes(handledMessage)
+					);
+				};
+				consumeChannel.BasicConsume(queue: consumeQueueName,
+					noAck: true,
+					consumer: consumer);
 
-                Console.WriteLine(" Press [enter] to exit.");
-                Console.ReadLine();
-            }
-        }
-
-        static async void sendMessageAsync(string Mess)
-        {
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri("https://chatapi.viber.com/pa/send_message");//TODO cut url to config
-                await client.PostAsync("", new StringContent(new ViberMessage(Mess).ToString(), Encoding.UTF8, "application/json"));
-            }
+				Console.WriteLine("Press [enter] to exit.");
+				Console.ReadLine();
+			}
         }
     }
 }
