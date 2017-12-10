@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2005
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Viber-handler", "Viber-handler\Viber-handler.csproj", "{A6151002-B0FA-4870-8B12-B09047D06D92}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A6151002-B0FA-4870-8B12-B09047D06D92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6151002-B0FA-4870-8B12-B09047D06D92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6151002-B0FA-4870-8B12-B09047D06D92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6151002-B0FA-4870-8B12-B09047D06D92}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6737059A-9B6B-4415-A73D-B95F04F256BE}
+	EndGlobalSection
+EndGlobal
