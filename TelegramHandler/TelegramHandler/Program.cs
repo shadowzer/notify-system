@@ -1,19 +1,21 @@
 ﻿using System;
-using System.Net.Http;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Web.Helpers;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using RabbitMQ.Client.Events;
+using TelegramHandler.Models;
+using RabbitMQ.Client;
 
-namespace Viber_handler
+namespace TelegramHandler
 {
-    class Worker
-    {
-        static void Main(string[] args)
-        {
-            var factory = new ConnectionFactory() { HostName = "localhost" }; //todo get hostname from properties
-            using (var connection = factory.CreateConnection())
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			IMessageConverter converter = new TelegramConvert();
+			using (var connection = RabbitClient.Instance.Connection)
 			using (var consumeChannel = connection.CreateModel())
 			using (var publishChannel = connection.CreateModel())
 			{
@@ -22,33 +24,33 @@ namespace Viber_handler
 				var consumeQueueName = consumeChannel.QueueDeclare().QueueName;
 				consumeChannel.QueueBind(queue: consumeQueueName,
 					exchange: "notifyMessages",
-					routingKey: "viberPending");
+					routingKey: "telegramPending");
 
 				publishChannel.ExchangeDeclare(exchange: "notifyMessages",
 					type: "direct");
 				var publishQueueName = publishChannel.QueueDeclare().QueueName;
 				publishChannel.QueueBind(queue: publishQueueName,
 					exchange: "notifyMessages",
-					routingKey: "viberReady");
+					routingKey: "telegramReady");
 
 				var consumer = new EventingBasicConsumer(consumeChannel);
-				var converter = new ViberConverter();
 				consumer.Received += (model, ea) =>
 				{
 					var message = Encoding.UTF8.GetString(ea.Body);
 					var handledMessage = JsonConvert.SerializeObject(converter.Convert(new Message(message)));
 					publishChannel.BasicPublish(exchange: "notifyMessages",
-						routingKey: "viberReady",
+						routingKey: "telegramReady",
+						basicProperties: null,
 						body: Encoding.UTF8.GetBytes(handledMessage)
 					);
 				};
 				consumeChannel.BasicConsume(queue: consumeQueueName,
-					noAck: true,
+					autoAck: true,
 					consumer: consumer);
 
 				Console.WriteLine("Press [enter] to exit.");
 				Console.ReadLine();
 			}
-        }
-    }
+		}
+	}
 }
